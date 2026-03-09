@@ -4,8 +4,12 @@ const router = express.Router();
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 
 async function tmdbProxy(req, res, path) {
-  const key = process.env.TMDB_API_KEY || '';
-  if (!key) return res.status(500).json({ message: 'TMDB_API_KEY is not configured' });
+  const key = process.env.TMDB_API_KEY || process.env.VITE_TMDB_API_KEY || '';
+  if (!key) {
+    return res.status(500).json({
+      message: 'TMDB key is not configured. Set TMDB_API_KEY (or VITE_TMDB_API_KEY) on the server.',
+    });
+  }
 
   const url = new URL(`${TMDB_BASE}${path}`);
   url.searchParams.set('api_key', key);
