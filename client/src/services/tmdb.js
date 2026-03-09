@@ -51,14 +51,13 @@ function normalizeMovie(m) {
 
 async function request(path, params = {}) {
   const key = getKey();
-  if (!key || key === 'your_api_key_here' || key === 'your_tmdb_api_key') {
-    console.error('[TMDB] VITE_TMDB_API_KEY is missing or is a placeholder. Add your key in client/.env');
-    return null;
-  }
-
-  const base = import.meta.env.DEV ? '/tmdb' : 'https://api.themoviedb.org/3';
+  const hasClientKey = !!key && key !== 'your_api_key_here' && key !== 'your_tmdb_api_key';
+  const useServerProxy = !import.meta.env.DEV || !hasClientKey;
+  const base = useServerProxy ? '/api/tmdb' : '/tmdb';
   const url = new URL(`${base}${path}`, window.location.origin);
-  url.searchParams.set('api_key', key);
+  if (!useServerProxy) {
+    url.searchParams.set('api_key', key);
+  }
   Object.entries(params).forEach(([k, v]) => {
     if (v != null && v !== '') url.searchParams.set(k, String(v));
   });

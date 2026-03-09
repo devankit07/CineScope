@@ -10,6 +10,7 @@ import historyRoutes from './routes/history.js';
 import adminRoutes from './routes/admin.js';
 import shortsRoutes from './routes/shorts.js';
 import commentsRoutes from './routes/comments.js';
+import tmdbRoutes from './routes/tmdb.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -28,6 +29,7 @@ app.use('/api/history', historyRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/shorts', shortsRoutes);
 app.use('/api/comments', commentsRoutes);
+app.use('/api/tmdb', tmdbRoutes);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res, next) => {
