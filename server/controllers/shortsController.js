@@ -6,6 +6,7 @@ const HISTORY_RESPONSE_LIMIT = 30;
 
 export const getShorts = async (req, res, next) => {
   try {
+    // No limit – return all shorts, newest first
     const clips = await ShortClip.find().sort({ createdAt: -1 }).lean();
     res.json(clips);
   } catch (err) {

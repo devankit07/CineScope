@@ -62,6 +62,12 @@ export const shortsApi = {
   getHistory: () => api.get('/shorts/history'),
 };
 
+export const commentsApi = {
+  getByMovie: (movieId) => api.get('/comments', { params: { movieId } }),
+  add: (movieId, text) => api.post('/comments', { movieId, text }),
+  delete: (id) => api.delete(`/comments/${id}`),
+};
+
 export const adminApi = {
   getUsers: () => api.get('/admin/users'),
   banUser: (id) => api.patch(`/admin/users/${id}/ban`),

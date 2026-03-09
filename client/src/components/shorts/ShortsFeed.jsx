@@ -16,6 +16,12 @@ export default function ShortsFeed() {
   const { clips, loading } = useSelector((s) => s.shorts);
   const [activeIndex, setActiveIndex] = useState(0);
   const viewRecordedRef = useRef(new Set());
+  const scrollRef = useRef(null);
+  const isResettingRef = useRef(false);
+  const n = clips.length;
+
+  // Display clips twice for seamless loop (infinite feed)
+  const displayClips = n > 0 ? [...clips, ...clips] : [];
 
   useEffect(() => {
     dispatch(setShortsLoading(true));
@@ -29,18 +35,41 @@ export default function ShortsFeed() {
       .finally(() => dispatch(setShortsLoading(false)));
   }, [dispatch]);
 
+  // When user scrolls past the end of the second set, reset to start (infinite loop)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || n === 0) return;
+    const onScroll = () => {
+      if (isResettingRef.current) return;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 2;
+      if (atBottom) {
+        isResettingRef.current = true;
+        el.style.scrollBehavior = 'auto';
+        el.scrollTop = 0;
+        requestAnimationFrame(() => {
+          el.style.scrollBehavior = 'smooth';
+          isResettingRef.current = false;
+          setActiveIndex(0);
+        });
+      }
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [n]);
+
   const handleVisible = useCallback(
     (index) => {
       setActiveIndex(index);
       if (!isAuthenticated) return;
-      const clip = clips[index];
+      const clip = clips[index % n];
       const movieId = clip?.movieId ?? clip?.id;
       if (movieId == null) return;
       if (viewRecordedRef.current.has(String(movieId))) return;
       viewRecordedRef.current.add(String(movieId));
       shortsApi.recordView(movieId).catch(() => {});
     },
-    [clips, isAuthenticated]
+    [clips, n, isAuthenticated]
   );
 
   const handleLike = useCallback(
@@ -107,14 +136,15 @@ export default function ShortsFeed() {
     <>
       <ShortNavigation />
       <div
+        ref={scrollRef}
         className="h-[calc(100vh-4rem)] overflow-y-auto overflow-x-hidden snap-y snap-mandatory scrollbar-hide"
         style={{ scrollBehavior: 'smooth' }}
       >
         <AnimatePresence initial={false}>
-          {clips.map((clip, index) => (
+          {displayClips.map((clip, index) => (
             <section
-              key={clip._id || clip.movieId || index}
-              className="h-[calc(100vh-4rem)] w-full snap-start snap-always"
+              key={`${clip._id || clip.movieId}-${index}`}
+              className="h-[calc(100vh-4rem)] w-full flex-shrink-0 snap-start snap-always"
             >
               <ShortVideoCard
                 clip={clip}

@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPosterUrl, getBackdropUrl, omdb } from '@/services/omdb';
 import { PLACEHOLDER_POSTER, DEFAULT_DESCRIPTION } from '@/utils/constants';
-import { openTrailerModal } from '@/redux/slices/uiSlice';
 import { addToHistory } from '@/redux/slices/historySlice';
 import { addFavorite, removeFavorite } from '@/redux/slices/favoritesSlice';
 import { favoritesApi, historyApi } from '@/services/api';
@@ -132,14 +131,13 @@ export default function MovieDetail() {
             )}
             <p className="text-gray-300 leading-relaxed mb-6">{description}</p>
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => dispatch(openTrailerModal({ movieId: movie.id }))}
+              <Link
+                to={`/watch/${movie.id}`}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent-red hover:bg-red-600 transition-colors font-medium"
               >
                 <Icon icon="mdi:play" className="w-5 h-5" />
                 Play Trailer
-              </button>
+              </Link>
               {isAuthenticated && (
                 <button
                   type="button"

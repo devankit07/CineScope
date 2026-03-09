@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Icon } from '@iconify/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { logout } from '@/redux/slices/authSlice';
@@ -9,12 +9,22 @@ import SearchBar from './SearchBar';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/hooks/useAuth';
 
+const SCROLL_THRESHOLD = 60;
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -27,31 +37,40 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
+    <nav
+      className={cn(
+        'fixed top-0 z-50 glass transition-all duration-300 ease-out',
+        scrolled
+          ? 'left-4 right-4 top-4 md:left-8 md:right-8 md:top-4 rounded-full border border-white/10 shadow-lg'
+          : 'left-0 right-0 border-b border-white/5'
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2 text-xl font-sansation font-bold tracking-tight">
-          <span className="bg-gradient-to-r from-accent-red to-accent-gold bg-clip-text text-transparent">
-            CineScope
-          </span>
-        </Link>
-        <div className="hidden md:flex items-center gap-6 ml-8">
-          <Link to="/" className="nav-swipe text-gray-400 hover:text-white transition-colors">Home</Link>
-          <Link to="/discover" className="nav-swipe text-gray-400 hover:text-white transition-colors">Movies</Link>
-          <Link to="/shorts" className="nav-swipe text-gray-400 hover:text-white transition-colors">Shorts</Link>
-          <Link to="/favorites" className="nav-swipe text-gray-400 hover:text-white transition-colors hidden lg:inline-flex">Favorites</Link>
-          <Link to="/profile" className="nav-swipe text-gray-400 hover:text-white transition-colors hidden lg:inline-flex">Profile</Link>
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="nav-swipe text-gray-200 hover:text-white transition-colors">
-              Dashboard
-            </Link>
-          )}
+        {/* Left: Logo + nav links */}
+        <div className="flex items-center gap-6 md:gap-8">
+          <Link to="/" className="flex items-center gap-2 text-xl font-sansation font-bold tracking-tight shrink-0">
+            <span className="bg-gradient-to-r from-accent-red to-accent-gold bg-clip-text text-transparent">
+              CineScope
+            </span>
+          </Link>
+          <div className="hidden md:flex items-center gap-6">
+            <Link to="/" className="nav-swipe text-gray-400 hover:text-white transition-colors">Home</Link>
+            <Link to="/discover" className="nav-swipe text-gray-400 hover:text-white transition-colors">Movies</Link>
+            <Link to="/shorts" className="nav-swipe text-gray-400 hover:text-white transition-colors">Shorts</Link>
+            {user?.role === 'admin' && (
+              <Link to="/admin" className="nav-swipe text-gray-200 hover:text-white transition-colors">
+                Dashboard
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="hidden md:flex items-center gap-4 flex-1 max-w-xl mx-6">
           <SearchBar onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} />
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right: CP, Fav, Watch, Profile (icons) */}
+        <div className="flex items-center gap-1 sm:gap-2">
           <button
             type="button"
             onClick={openCommandPalette}
@@ -71,20 +90,11 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/history"
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors hidden sm:block"
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                 title="Watch history"
               >
                 <Icon icon="mdi:history" className="w-5 h-5" />
               </Link>
-              {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                  title="Admin"
-                >
-                  <Icon icon="mdi:shield-account" className="w-5 h-5" />
-                </Link>
-              )}
               <div className="relative">
                 <button
                   type="button"
@@ -166,6 +176,7 @@ export default function Navbar() {
             type="button"
             className="md:hidden p-2 rounded-lg hover:bg-white/10"
             onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Menu"
           >
             <Icon icon="mdi:menu" className="w-6 h-6" />
           </button>

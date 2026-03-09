@@ -16,6 +16,7 @@ import Discover from '@/pages/Discover';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Profile from '@/pages/Profile';
 import Shorts from '@/pages/Shorts';
+import Watch from '@/pages/Watch';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
           <Route path="movie/:id" element={<MovieDetail />} />
+          <Route path="watch/:id" element={<Watch />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="discover" element={<Discover />} />

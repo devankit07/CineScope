@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import HeroBanner from '@/components/HeroBanner';
+import LanguageCarousel from '@/components/LanguageCarousel';
 import MovieGrid from '@/components/MovieGrid';
 import MovieCard from '@/components/MovieCard';
 import {
@@ -87,6 +88,7 @@ export default function Home() {
       {isAuthenticated && recommended.length > 0 && (
         <MovieGrid movies={recommended} title="Recommended For You" subtitle="Based on your favorite genres" />
       )}
+      <LanguageCarousel />
       <MovieGrid movies={trending} loading={loading} title="Trending Now" />
       <MovieGrid movies={popular} title="Popular" />
       <MovieGrid movies={topRated} title="Top Rated" />

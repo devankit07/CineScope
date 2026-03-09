@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
 import { getPosterUrl } from '@/services/omdb';
 import { PLACEHOLDER_POSTER } from '@/utils/constants';
 import { useDispatch, useSelector } from 'react-redux';
-import { openTrailerModal } from '@/redux/slices/uiSlice';
 import { addFavorite, removeFavorite } from '@/redux/slices/favoritesSlice';
 import { favoritesApi } from '@/services/api';
 import toast from 'react-hot-toast';
@@ -13,6 +12,7 @@ import { cn } from '@/utils/cn';
 
 export default function MovieCard({ movie, layout = 'poster' }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isAuthenticated } = useSelector((s) => s.auth);
   const favoriteItems = useSelector((s) => s.favorites.items);
   const movieId = String(movie.id || movie.imdbID || '');
@@ -58,11 +58,7 @@ export default function MovieCard({ movie, layout = 'poster' }) {
   const openTrailer = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    dispatch(openTrailerModal({
-      movieId,
-      title: title,
-      posterUrl: poster,
-    }));
+    navigate(`/watch/${movieId}`);
   };
 
   return (

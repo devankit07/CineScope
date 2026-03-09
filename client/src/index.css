@@ -74,3 +74,9 @@ h1, h2, h3, h4, h5, h6 {
 .nav-swipe:focus-visible::after {
   transform: scaleX(1);
 }
+
+/* Dropdown options: dark background + light text so they're visible when opened */
+select option {
+  background-color: #1a1a24;
+  color: #f3f4f6;
+}

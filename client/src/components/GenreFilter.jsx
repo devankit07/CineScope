@@ -14,44 +14,46 @@ export default function GenreFilter() {
     dispatch(setFilters({ [key]: value }));
   };
 
+  const optionStyle = { backgroundColor: '#1a1a24', color: '#f3f4f6' };
+
   return (
     <div className="flex flex-wrap items-center gap-3 px-4 sm:px-6 py-4 glass border-b border-white/5">
       <select
         value={genre}
         onChange={(e) => update('genre', e.target.value)}
-        className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-accent-red/50 outline-none"
+        className="px-4 py-2 rounded-lg bg-dark-700 border border-white/10 text-white focus:border-accent-red/50 outline-none appearance-none cursor-pointer"
       >
         {GENRE_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
+          <option key={opt.value} value={opt.value} style={optionStyle}>{opt.label}</option>
         ))}
       </select>
       <select
         value={rating}
         onChange={(e) => update('rating', e.target.value)}
-        className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-accent-red/50 outline-none"
+        className="px-4 py-2 rounded-lg bg-dark-700 border border-white/10 text-white focus:border-accent-red/50 outline-none appearance-none cursor-pointer"
       >
-        <option value="">All ratings</option>
+        <option value="" style={optionStyle}>All ratings</option>
         {[6, 7, 8, 9].map((n) => (
-          <option key={n} value={n}>{n}+</option>
+          <option key={n} value={n} style={optionStyle}>{n}+</option>
         ))}
       </select>
       <select
         value={year}
         onChange={(e) => update('year', e.target.value)}
-        className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-accent-red/50 outline-none"
+        className="px-4 py-2 rounded-lg bg-dark-700 border border-white/10 text-white focus:border-accent-red/50 outline-none appearance-none cursor-pointer"
       >
-        <option value="">All years</option>
+        <option value="" style={optionStyle}>All years</option>
         {years.map((y) => (
-          <option key={y} value={y}>{y}</option>
+          <option key={y} value={y} style={optionStyle}>{y}</option>
         ))}
       </select>
       <select
         value={sortBy}
         onChange={(e) => update('sortBy', e.target.value)}
-        className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:border-accent-red/50 outline-none"
+        className="px-4 py-2 rounded-lg bg-dark-700 border border-white/10 text-white focus:border-accent-red/50 outline-none cursor-pointer"
       >
         {SORT_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
+          <option key={opt.value} value={opt.value} style={optionStyle}>{opt.label}</option>
         ))}
       </select>
     </div>

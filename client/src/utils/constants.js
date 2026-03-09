@@ -3,7 +3,14 @@ export const DEFAULT_DESCRIPTION = 'Description not available.';
 export const TRAILER_UNAVAILABLE = 'Trailer for this movie is currently unavailable.';
 
 // Hero videos from public/hero
-export const HERO_VIDEOS = ['/hero/hero.mp4', '/hero/hero2.mp4', '/hero/hero3.mp4'];
+export const HERO_VIDEOS = [
+  '/hero/hero.mp4',
+  '/hero/hero2.mp4',
+  '/hero/hero3.mp4',
+  '/hero/hero4.mp4',
+  '/hero/hero5.mp4',
+  '/hero/hero6.mp4',
+];
 
 export const GENRE_OPTIONS = [
   { value: '', label: 'All Genres' },

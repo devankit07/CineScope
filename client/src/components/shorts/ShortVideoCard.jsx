@@ -50,15 +50,13 @@ export default function ShortVideoCard({
     const video = videoRef.current;
     if (!video) return;
     if (isActive && hasVideo) {
-      video.src = videoUrl;
-      video.load();
+      if (video.src !== videoUrl) {
+        video.src = videoUrl;
+        video.load();
+      }
       video.play().catch(() => setVideoError(true));
     } else {
       video.pause();
-      if (!isActive) {
-        video.removeAttribute('src');
-        video.load();
-      }
     }
   }, [isActive, hasVideo, videoUrl]);
 
@@ -119,6 +117,7 @@ export default function ShortVideoCard({
           >
             {genre}
           </motion.p>
+        )}
       </div>
 
       <ShortActions
