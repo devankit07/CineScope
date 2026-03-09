@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import HeroBanner from '@/components/HeroBanner';
 import LanguageCarousel from '@/components/LanguageCarousel';
 import MovieGrid from '@/components/MovieGrid';
+import MovieWiper from '@/components/MovieWiper';
+import MovieCarousel from '@/components/MovieCarousel';
 import MovieCard from '@/components/MovieCard';
 import {
   setTrending,
@@ -12,7 +14,7 @@ import {
   setUpcoming,
   setLoading,
 } from '@/redux/slices/movieSlice';
-import { fetchSectionResults } from '@/services/omdb';
+import { fetchSectionResults } from '@/services/tmdb';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
@@ -89,10 +91,20 @@ export default function Home() {
         <MovieGrid movies={recommended} title="Recommended For You" subtitle="Based on your favorite genres" />
       )}
       <LanguageCarousel />
-      <MovieGrid movies={trending} loading={loading} title="Trending Now" />
-      <MovieGrid movies={popular} title="Popular" />
-      <MovieGrid movies={topRated} title="Top Rated" />
-      <MovieGrid movies={upcoming} title="Upcoming" />
+      <MovieGrid movies={trending} loading={loading} title="Trending Now" mobilePaginated />
+      <div className="hidden md:block">
+        <MovieCarousel movies={popular} loading={loading} title="Popular" />
+      </div>
+      <div className="md:hidden">
+        <MovieWiper movies={popular} loading={loading} title="Popular" />
+      </div>
+      <MovieGrid movies={topRated} title="Top Rated" mobilePaginated />
+      <div className="hidden md:block">
+        <MovieCarousel movies={upcoming} loading={loading} title="Upcoming" />
+      </div>
+      <div className="md:hidden">
+        <MovieWiper movies={upcoming} loading={loading} title="Upcoming" />
+      </div>
     </div>
   );
 }

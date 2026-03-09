@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
-import { getPosterUrl } from '@/services/omdb';
+import { getPosterUrl } from '@/services/tmdb';
 import { PLACEHOLDER_POSTER } from '@/utils/constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { addFavorite, removeFavorite } from '@/redux/slices/favoritesSlice';

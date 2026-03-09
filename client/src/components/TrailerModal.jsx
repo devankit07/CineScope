@@ -6,7 +6,7 @@ import { closeTrailerModal } from '@/redux/slices/uiSlice';
 import { addToHistory } from '@/redux/slices/historySlice';
 import { historyApi } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
-import { getYouTubeEmbedUrl } from '@/services/omdb';
+import { getYouTubeEmbedUrl, tmdb } from '@/services/tmdb';
 import { TRAILER_UNAVAILABLE } from '@/utils/constants';
 
 export default function TrailerModal() {
@@ -30,9 +30,15 @@ export default function TrailerModal() {
       setLoading(false);
       return;
     }
-    // OMDB does not provide trailer/video links — show unavailable
-    setError(true);
-    setLoading(false);
+    // Fetch trailer key from TMDB
+    tmdb
+      .getVideos(movieId)
+      .then(({ key: trailerKey }) => {
+        setKey(trailerKey || null);
+        setError(!trailerKey);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [open, movieId, propKey]);
 
   const embedUrl = getYouTubeEmbedUrl(key);

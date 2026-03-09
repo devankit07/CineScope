@@ -3,11 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { getPosterUrl, getBackdropUrl, omdb } from '@/services/omdb';
+import { getPosterUrl, getBackdropUrl, tmdb } from '@/services/tmdb';
 import { PLACEHOLDER_POSTER, DEFAULT_DESCRIPTION } from '@/utils/constants';
 import { addToHistory } from '@/redux/slices/historySlice';
 import { addFavorite, removeFavorite } from '@/redux/slices/favoritesSlice';
-import { favoritesApi, historyApi } from '@/services/api';
+import { favoritesApi, historyApi, moviesApi } from '@/services/api';
 import toast from 'react-hot-toast';
 import LoaderSkeleton from '@/components/LoaderSkeleton';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,20 +20,60 @@ export default function MovieDetail() {
   const { isAuthenticated, user } = useAuth();
   const favoriteIds = useSelector((s) => s.favorites.items.map((f) => String(f.movieId)));
   const isFavorite = favoriteIds.includes(String(id));
+  const isCustom = String(id).startsWith('custom:');
+  const customId = isCustom ? String(id).replace('custom:', '') : null;
+
+  const extractYouTubeKey = (value) => {
+    if (!value) return null;
+    const raw = String(value).trim();
+    if (!raw) return null;
+    if (/^[a-zA-Z0-9_-]{6,}$/.test(raw) && !raw.startsWith('http')) return raw;
+    try {
+      const u = new URL(raw);
+      if (u.hostname.includes('youtu.be')) return u.pathname.replace('/', '') || null;
+      if (u.hostname.includes('youtube.com')) {
+        if (u.searchParams.get('v')) return u.searchParams.get('v');
+        const parts = u.pathname.split('/');
+        const embedIdx = parts.findIndex((p) => p === 'embed');
+        if (embedIdx >= 0 && parts[embedIdx + 1]) return parts[embedIdx + 1];
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setLoading(true);
-    omdb
-      .getById(id)
+    const request = isCustom
+      ? moviesApi.getById(customId).then((res) => {
+        const m = res.data;
+        const trailerKey = extractYouTubeKey(m.trailerYouTubeLink);
+        const fallbackPoster = trailerKey ? `https://img.youtube.com/vi/${trailerKey}/hqdefault.jpg` : '';
+        return {
+          id: `custom:${m._id}`,
+          title: m.title,
+          posterUrl: m.posterUrl || fallbackPoster,
+          backdrop_path: '',
+          release_date: m.releaseDate || '',
+          vote_average: Number(m.rating) || 0,
+          overview: m.description || '',
+          genre: Array.isArray(m.genre) ? m.genre : [],
+          trailerYouTubeLink: m.trailerYouTubeLink || '',
+          isCustom: true,
+        };
+      })
+      : tmdb.getById(id);
+    request
       .then((data) => {
         if (!cancelled) setMovie(data);
       })
       .catch(() => { if (!cancelled) setMovie(null); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, isCustom, customId]);
 
   useEffect(() => {
     if (!movie || !isAuthenticated) return;

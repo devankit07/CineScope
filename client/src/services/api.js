@@ -68,6 +68,11 @@ export const commentsApi = {
   delete: (id) => api.delete(`/comments/${id}`),
 };
 
+export const moviesApi = {
+  getPublic: (params = {}) => api.get('/movies', { params }),
+  getById: (id) => api.get(`/movies/${id}`),
+};
+
 export const adminApi = {
   getUsers: () => api.get('/admin/users'),
   banUser: (id) => api.patch(`/admin/users/${id}/ban`),

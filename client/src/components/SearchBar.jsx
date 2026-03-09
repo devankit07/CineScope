@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDebounce } from '@/hooks/useDebounce';
-import { omdb, getPosterUrl } from '@/services/omdb';
+import { tmdb, getPosterUrl } from '@/services/tmdb';
 import { PLACEHOLDER_POSTER } from '@/utils/constants';
 import { cn } from '@/utils/cn';
 
@@ -24,7 +24,7 @@ export default function SearchBar({ onFocus, onBlur, compact }) {
     }
     let cancelled = false;
     setLoading(true);
-    omdb
+    tmdb
       .search(debouncedQuery, 1)
       .then((data) => {
         if (!cancelled) setResults((data.results ?? []).slice(0, 8));

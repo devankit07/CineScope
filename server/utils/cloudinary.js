@@ -16,11 +16,11 @@ export function uploadToCloudinary(buffer, options = {}) {
   const { resource_type = 'auto', folder = 'cinescope' } = options;
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
+      { resource_type, folder },
       (err, result) => {
         if (err) return reject(err);
         resolve({ url: result.secure_url, public_id: result.public_id });
-      },
-      { resource_type, folder }
+      }
     );
     stream.end(buffer);
   });

@@ -39,15 +39,15 @@ export default function Navbar() {
   return (
     <nav
       className={cn(
-        'fixed top-0 z-50 glass transition-all duration-300 ease-out',
-        scrolled
-          ? 'left-4 right-4 top-4 md:left-8 md:right-8 md:top-4 rounded-full border border-white/10 shadow-lg'
-          : 'left-0 right-0 border-b border-white/5'
+        'fixed left-0 right-0 top-0 z-50 glass transition-all duration-300 ease-out',
+        !scrolled && 'border-b border-white/5',
+        scrolled && 'border-b border-white/10 shadow-lg',
+        scrolled && 'md:left-8 md:right-8 md:top-4 md:rounded-full md:border md:border-white/10 md:shadow-lg'
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-        {/* Left: Logo + nav links */}
-        <div className="flex items-center gap-6 md:gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-2 min-h-16">
+        {/* Left: Logo + nav links (desktop) */}
+        <div className="flex items-center gap-6 md:gap-8 min-w-0">
           <Link to="/" className="flex items-center gap-2 text-xl font-sansation font-bold tracking-tight shrink-0">
             <span className="bg-gradient-to-r from-accent-red to-accent-gold bg-clip-text text-transparent">
               CineScope
@@ -65,16 +65,20 @@ export default function Navbar() {
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-4 flex-1 max-w-xl mx-6">
+        {/* Center: Search — full on desktop, compact on mobile */}
+        <div className="flex-1 max-w-xl mx-2 md:mx-6 min-w-0 hidden md:block">
           <SearchBar onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} />
         </div>
+        <div className="flex-1 min-w-0 md:hidden max-w-[140px] sm:max-w-[180px]">
+          <SearchBar compact onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} />
+        </div>
 
-        {/* Right: CP, Fav, Watch, Profile (icons) */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        {/* Right: SP + 4 options — keyboard (command palette) on desktop only; on mobile it's in bottom nav */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={openCommandPalette}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="hidden md:flex p-2 rounded-lg hover:bg-white/10 transition-colors"
             title="Command palette (Ctrl+K)"
           >
             <Icon icon="mdi:keyboard" className="w-5 h-5" />
@@ -172,14 +176,6 @@ export default function Navbar() {
               </Link>
             </div>
           )}
-          <button
-            type="button"
-            className="md:hidden p-2 rounded-lg hover:bg-white/10"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Menu"
-          >
-            <Icon icon="mdi:menu" className="w-6 h-6" />
-          </button>
         </div>
       </div>
       {searchFocused && (

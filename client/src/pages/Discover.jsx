@@ -8,7 +8,8 @@ import {
   setHasMore,
   resetDiscover,
 } from '@/redux/slices/movieSlice';
-import { omdb } from '@/services/omdb';
+import { tmdb } from '@/services/tmdb';
+import { moviesApi } from '@/services/api';
 import MovieGrid from '@/components/MovieGrid';
 import GenreFilter from '@/components/GenreFilter';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -17,42 +18,100 @@ export default function Discover() {
   const dispatch = useDispatch();
   const { filters, searchResults, page, hasMore, loading } = useSelector((s) => s.movies);
 
+  const extractYouTubeKey = (value) => {
+    if (!value) return null;
+    const raw = String(value).trim();
+    if (!raw) return null;
+    if (/^[a-zA-Z0-9_-]{6,}$/.test(raw) && !raw.startsWith('http')) return raw;
+    try {
+      const u = new URL(raw);
+      if (u.hostname.includes('youtu.be')) return u.pathname.replace('/', '') || null;
+      if (u.hostname.includes('youtube.com')) {
+        if (u.searchParams.get('v')) return u.searchParams.get('v');
+        const parts = u.pathname.split('/');
+        const embedIdx = parts.findIndex((p) => p === 'embed');
+        if (embedIdx >= 0 && parts[embedIdx + 1]) return parts[embedIdx + 1];
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+
+  const getAdminPoster = (m) => {
+    if (m.posterUrl) return m.posterUrl;
+    const key = extractYouTubeKey(m.trailerYouTubeLink);
+    return key ? `https://img.youtube.com/vi/${key}/hqdefault.jpg` : '';
+  };
+
+  const mapAdminMovie = (m) => ({
+    id: `custom:${m._id}`,
+    sourceMovieId: m.movieId,
+    title: m.title,
+    posterUrl: getAdminPoster(m),
+    poster_path: '',
+    release_date: m.releaseDate || '',
+    vote_average: Number(m.rating) || 0,
+    overview: m.description || '',
+    genre: Array.isArray(m.genre) ? m.genre : [],
+    trailerYouTubeLink: m.trailerYouTubeLink || '',
+    isCustom: true,
+  });
+
   const loadFirstPage = useCallback(() => {
     dispatch(setLoading(true));
-    const searchTerm = filters.genre || 'movie';
     const page = 1;
-    omdb
-      .search(searchTerm, page, filters.year || '')
-      .then((data) => {
-        const list = data.results ?? [];
-        dispatch(setSearchResults(list));
+    Promise.all([
+      tmdb.discover({
+        page,
+        with_genres: filters.genre || '',
+        year: filters.year || '',
+        sortBy: filters.sortBy || 'popularity.desc',
+        voteAverage: filters.rating || '',
+      }),
+      moviesApi.getPublic({ limit: 24 }).catch(() => ({ data: [] })),
+    ])
+      .then(([data, adminRes]) => {
+        const tmdbList = data?.results ?? [];
+        const hasActiveFilters = !!(filters.genre || filters.year || filters.rating);
+        const adminList = hasActiveFilters
+          ? []
+          : (adminRes?.data ?? []).map(mapAdminMovie);
+        const adminIds = new Set(adminList.map((m) => String(m.id)));
+        const merged = [...adminList, ...tmdbList.filter((m) => !adminIds.has(String(m.id)))];
+        dispatch(setSearchResults(merged));
         dispatch(setPage(2));
-        dispatch(setHasMore((data.total_pages ?? 1) > 1));
+        dispatch(setHasMore((data?.total_pages ?? 1) > 1));
       })
       .catch(() => dispatch(setHasMore(false)))
       .finally(() => dispatch(setLoading(false)));
-  }, [dispatch, filters.genre, filters.year]);
+  }, [dispatch, filters.genre, filters.year, filters.sortBy, filters.rating]);
 
   const loadNextPage = useCallback(() => {
     if (loading || !hasMore) return;
     dispatch(setLoading(true));
-    const searchTerm = filters.genre || 'movie';
-    omdb
-      .search(searchTerm, page, filters.year || '')
+    tmdb
+      .discover({
+        page,
+        with_genres: filters.genre || '',
+        year: filters.year || '',
+        sortBy: filters.sortBy || 'popularity.desc',
+        voteAverage: filters.rating || '',
+      })
       .then((data) => {
-        const list = data.results ?? [];
+        const list = data?.results ?? [];
         dispatch(appendSearchResults(list));
         dispatch(setPage(page + 1));
-        dispatch(setHasMore((data.total_pages ?? 1) > (data.page ?? 1)));
+        dispatch(setHasMore((data?.total_pages ?? 1) > (data?.page ?? 1)));
       })
       .catch(() => dispatch(setHasMore(false)))
       .finally(() => dispatch(setLoading(false)));
-  }, [dispatch, filters.genre, filters.year, page, hasMore, loading]);
+  }, [dispatch, filters.genre, filters.year, filters.sortBy, filters.rating, page, hasMore, loading]);
 
   useEffect(() => {
     dispatch(resetDiscover());
     loadFirstPage();
-  }, [filters.genre, filters.year, dispatch]);
+  }, [dispatch, loadFirstPage]);
 
   const sentinelRef = useInfiniteScroll(loadNextPage, { enabled: hasMore && !loading });
 

@@ -1,9 +1,9 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Icon } from '@iconify/react';
 import ShortActions from './ShortActions';
 import { PLACEHOLDER_POSTER } from '@/utils/constants';
 import { useAuth } from '@/hooks/useAuth';
+import { tmdb } from '@/services/tmdb';
 
 export default function ShortVideoCard({
   clip,
@@ -18,6 +18,7 @@ export default function ShortVideoCard({
   const { isAuthenticated, user } = useAuth();
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
 
   const movieId = clip?.movieId ?? clip?.id;
   const title = clip?.title ?? '';
@@ -25,7 +26,15 @@ export default function ShortVideoCard({
   const poster = clip?.poster || PLACEHOLDER_POSTER;
   const videoUrl = clip?.videoUrl || '';
 
+  // When no uploaded clip, try TMDB trailer (YouTube key)
+  useEffect(() => {
+    if (videoUrl || !movieId) return;
+    tmdb.getVideos(movieId).then(({ key }) => setTrailerKey(key || null));
+  }, [movieId, videoUrl]);
+
   const hasVideo = videoUrl && !videoError;
+  const hasTrailer = !videoUrl && trailerKey;
+  const showTrailer = hasTrailer && isActive;
   const isLiked = isAuthenticated && (user?.likedClips || []).map(String).includes(String(movieId));
   const isSaved = isAuthenticated && (user?.watchLater || []).map(String).includes(String(movieId));
 
@@ -63,6 +72,10 @@ export default function ShortVideoCard({
   const handleLoadedData = useCallback(() => setVideoLoaded(true), []);
   const handleError = useCallback(() => setVideoError(true), []);
 
+  const trailerEmbedUrl = trailerKey
+    ? `https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=1&rel=0`
+    : null;
+
   return (
     <motion.div
       ref={containerRef}
@@ -82,6 +95,26 @@ export default function ShortVideoCard({
           onLoadedData={handleLoadedData}
           onError={handleError}
         />
+      ) : showTrailer && trailerEmbedUrl ? (
+        <iframe
+          src={trailerEmbedUrl}
+          title={`${title} trailer`}
+          className="absolute inset-0 w-full h-full object-cover"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : hasTrailer ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-800 p-6">
+          <img
+            src={poster}
+            alt=""
+            className="max-h-[50vh] w-auto rounded-lg shadow-2xl object-contain mb-4"
+            onError={(e) => {
+              e.target.src = PLACEHOLDER_POSTER;
+            }}
+          />
+          <p className="text-gray-400 text-sm">Scroll to this short to play trailer</p>
+        </div>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-800 p-6 text-center">
           <img
