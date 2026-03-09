@@ -9,6 +9,24 @@ import { setClips, setShortsLoading, setShortsError } from '@/redux/slices/short
 import { updateUser } from '@/redux/slices/authSlice';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import { tmdb, getPosterUrl } from '@/services/tmdb';
+
+const TMDB_GENRE_MAP = {
+  28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+  99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+  27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance',
+  878: 'Sci-Fi', 10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western',
+};
+
+function tmdbMoviesToClips(movies) {
+  return movies.map((m) => ({
+    movieId: m.id,
+    title: m.title,
+    poster: getPosterUrl(m.poster_path),
+    genre: (m.genre_ids || []).slice(0, 2).map((id) => TMDB_GENRE_MAP[id]).filter(Boolean).join(' • '),
+    videoUrl: '',
+  }));
+}
 
 export default function ShortsFeed() {
   const dispatch = useDispatch();
@@ -27,10 +45,39 @@ export default function ShortsFeed() {
     dispatch(setShortsLoading(true));
     shortsApi
       .getClips()
-      .then((res) => dispatch(setClips(res.data)))
-      .catch((err) => {
-        dispatch(setClips([]));
-        dispatch(setShortsError(err.response?.data?.message || 'Failed to load shorts'));
+      .then(async (res) => {
+        const dbClips = Array.isArray(res.data) ? res.data : [];
+        if (dbClips.length > 0) {
+          dispatch(setClips(dbClips));
+        } else {
+          // No admin clips → fall back to TMDB trending movies as shorts
+          const [trending, popular] = await Promise.all([
+            tmdb.getTrending(1),
+            tmdb.getPopular(1),
+          ]);
+          const movies = [
+            ...(trending?.results || []),
+            ...(popular?.results || []),
+          ];
+          // Deduplicate by id
+          const seen = new Set();
+          const unique = movies.filter((m) => {
+            if (seen.has(m.id)) return false;
+            seen.add(m.id);
+            return true;
+          });
+          dispatch(setClips(tmdbMoviesToClips(unique.slice(0, 20))));
+        }
+      })
+      .catch(async () => {
+        // API down → still try TMDB
+        try {
+          const trending = await tmdb.getTrending(1);
+          dispatch(setClips(tmdbMoviesToClips((trending?.results || []).slice(0, 20))));
+        } catch {
+          dispatch(setClips([]));
+          dispatch(setShortsError('Failed to load shorts'));
+        }
       })
       .finally(() => dispatch(setShortsLoading(false)));
   }, [dispatch]);
