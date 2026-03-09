@@ -52,14 +52,19 @@ function normalizeMovie(m) {
 async function request(path, params = {}) {
   const key = getKey();
   const hasClientKey = !!key && key !== 'your_api_key_here' && key !== 'your_tmdb_api_key';
-  // Prefer direct TMDB calls when client key exists (works on production too).
-  // Fall back to server proxy when key is missing.
-  const useServerProxy = !hasClientKey;
-  const base = useServerProxy
-    ? '/api/tmdb'
-    : (import.meta.env.DEV ? '/tmdb' : 'https://api.themoviedb.org/3');
+
+  // In dev: use Vite's /tmdb proxy (which goes through Node to bypass ISP DNS block).
+  // In production: ALWAYS use /api/tmdb server proxy — never expose direct browser→TMDB calls
+  //   (avoids CORS issues, DNS blocks, and keeps the key server-side).
+  let base;
+  if (import.meta.env.DEV) {
+    base = hasClientKey ? '/tmdb' : '/api/tmdb';
+  } else {
+    base = '/api/tmdb';
+  }
+
   const url = new URL(`${base}${path}`, window.location.origin);
-  if (!useServerProxy) {
+  if (import.meta.env.DEV && hasClientKey) {
     url.searchParams.set('api_key', key);
   }
   Object.entries(params).forEach(([k, v]) => {

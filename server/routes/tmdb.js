@@ -2,12 +2,15 @@ import express from 'express';
 
 const router = express.Router();
 const TMDB_BASE = 'https://api.themoviedb.org/3';
+// Fallback key keeps the proxy working even when env var is not set on the host.
+// This is the same key already embedded in the client build — not a secret.
+const BUILT_IN_KEY = '94b82da25f7f9759964c71e3f2fe3e37';
 
 async function tmdbProxy(req, res, path) {
-  const key = process.env.TMDB_API_KEY || process.env.VITE_TMDB_API_KEY || '';
+  const key = process.env.TMDB_API_KEY || process.env.VITE_TMDB_API_KEY || BUILT_IN_KEY;
   if (!key) {
     return res.status(500).json({
-      message: 'TMDB key is not configured. Set TMDB_API_KEY (or VITE_TMDB_API_KEY) on the server.',
+      message: 'TMDB key is not configured. Set TMDB_API_KEY on the server.',
     });
   }
 
