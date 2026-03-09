@@ -44,6 +44,22 @@ export default defineConfig({
   build: {
     outDir: '../server/public',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
+          'vendor-ui': ['framer-motion', '@emotion/react', '@emotion/styled', '@mui/material'],
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-slot',
+          ],
+          'vendor-misc': ['axios', 'react-hot-toast', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
